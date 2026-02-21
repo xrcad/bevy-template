@@ -1,0 +1,141 @@
+name: Build Rust Libraries
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Pin NDK version - change here only, propagates everywhere
+  NDK_VERSION: "27.2.12479018"
+  # Minimum Android API - GameActivity requires 31+
+  MIN_SDK: "31"
+
+jobs:
+  # ── Android .so ────────────────────────────────────────────────────────────
+  android-lib:
+    name: Android .so (arm64-v8a)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: android-aarch64
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install NDK
+        run: |
+          sdkmanager "ndk;${{ env.NDK_VERSION }}"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }}" >> $GITHUB_ENV
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Build debug .so
+        run: |
+          cargo ndk \
+            --target aarch64-linux-android \
+            --platform ${{ env.MIN_SDK }} \
+            -o android-project/app/src/main/jniLibs \
+            build --package myapp
+
+      - name: Build release .so
+        run: |
+          cargo ndk \
+            --target aarch64-linux-android \
+            --platform ${{ env.MIN_SDK }} \
+            -o android-project/app/src/main/jniLibs \
+            build --release --package myapp
+
+      # libc++_shared.so is copied automatically by cargo-ndk when the
+      # `android_shared_stdcxx` Bevy feature is enabled. No manual copy needed.
+
+      - name: Upload jniLibs
+        uses: actions/upload-artifact@v4
+        with:
+          name: jniLibs
+          path: android-project/app/src/main/jniLibs/
+          retention-days: 7
+
+  # ── WASM ───────────────────────────────────────────────────────────────────
+  wasm-lib:
+    name: WASM binary
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm
+
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --locked
+
+      - name: Build WASM
+        run: |
+          cargo build --release --target wasm32-unknown-unknown --package myapp
+          wasm-bindgen \
+            --out-dir wasm-out \
+            --target web \
+            target/wasm32-unknown-unknown/release/myapp.wasm
+
+      - name: Upload WASM
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-out
+          path: wasm-out/
+          retention-days: 7
+
+  # ── Linux ──────────────────────────────────────────────────────────────────
+  linux-bin:
+    name: Linux binary
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libudev-dev \
+            libxkbcommon-dev \
+            libwayland-dev
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: linux
+
+      - name: Build Linux
+        run: cargo build --release --package myapp
+
+      - name: Upload Linux binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-bin
+          path: target/release/myapp
+          retention-days: 7

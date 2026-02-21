@@ -1,0 +1,95 @@
+name: Assemble Android APK
+
+on:
+  workflow_run:
+    workflows: ["Build Rust Libraries"]
+    types: [completed]
+  # Also allow manual trigger with a specific run ID to re-assemble from existing libs
+  workflow_dispatch:
+    inputs:
+      rust_run_id:
+        description: "Run ID of Build Rust Libraries to pull artifacts from"
+        required: false
+
+jobs:
+  assemble-apk:
+    name: Assemble debug + release APK
+    runs-on: ubuntu-24.04
+    # Only run if the upstream rust build succeeded (skip on workflow_dispatch)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Download jniLibs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jniLibs
+          path: android-project/app/src/main/jniLibs/
+          # Pull from the triggering workflow run, or the manually specified run ID
+          run-id: ${{ github.event.workflow_run.id || inputs.rust_run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Gradle wrapper
+        working-directory: android-project
+        run: gradle wrapper
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('android-project/**/*.gradle*', 'android-project/gradle/wrapper/gradle-wrapper.properties') }}
+
+      # ── Debug APK ──────────────────────────────────────────────────────────
+      - name: Assemble debug APK
+        working-directory: android-project
+        run: ./gradlew assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: android-project/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      # ── Release APK ────────────────────────────────────────────────────────
+      - name: Decode keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 --decode > /tmp/release.keystore
+
+      - name: Assemble release APK
+        working-directory: android-project
+        env:
+          KEYSTORE_PATH: /tmp/release.keystore
+          KEYSTORE_PASS: ${{ secrets.RELEASE_KEYSTORE_PASS }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.RELEASE_KEY_PASS }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASS" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASS"
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: android-project/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Cleanup keystore
+        if: always()
+        run: rm -f /tmp/release.keystore

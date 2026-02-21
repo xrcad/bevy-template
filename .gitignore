@@ -1,0 +1,28 @@
+# Rust
+/target/
+Cargo.lock
+
+# Android build outputs
+android-project/.gradle/
+android-project/build/
+android-project/app/build/
+android-project/local.properties
+*.apk
+*.aab
+
+# Android signing - NEVER commit these
+*.keystore
+*.jks
+
+# WASM output
+wasm-out/
+
+# Nix
+.direnv/
+result
+
+# Editor
+.idea/
+.vscode/
+*.swp
+

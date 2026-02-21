@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        GameActivity (AGDK) requires:
+          1. The activity class extends GameActivity (not NativeActivity)
+          2. The theme derives from Theme.AppCompat (not Theme.DeviceDefault)
+          3. minSdk >= 31
+          4. Bevy built with the `android-game-activity` feature (its default)
+    -->
+    <application
+        android:label="@string/app_name"
+        android:allowBackup="false"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|uiMode">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                GameActivity uses a SurfaceView. This metadata key tells it to
+                use the entire screen surface rather than inserting a window inset.
+            -->
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="myapp" />
+        </activity>
+    </application>
+
+    <!-- Vulkan: required=false lets wgpu fall back to GLES on older hardware -->
+    <uses-feature
+        android:name="android.hardware.vulkan.level"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.vulkan.version"
+        android:version="0x00401000"
+        android:required="false" />
+
+</manifest>

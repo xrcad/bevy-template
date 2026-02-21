@@ -1,0 +1,48 @@
+[package]
+name = "myapp"
+version = "0.1.0"
+edition = "2021"
+
+# The [lib] section is required for Android — Bevy must be built as a cdylib.
+# The rlib is needed so `cargo run` still works on desktop.
+[lib]
+name = "myapp"
+crate-type = ["cdylib", "rlib"]
+
+# Keep the [[bin]] for desktop/WASM entry point
+[[bin]]
+name = "myapp"
+path = "src/main.rs"
+
+[dependencies]
+bevy = { version = "0.18", default-features = false, features = [
+    # Core rendering
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_scene",
+    # Asset handling
+    "bevy_asset",
+    "bevy_animation",
+    # Input
+    "bevy_input",
+    # Windowing - android-game-activity is Bevy's default and requires minSdk 31
+    "bevy_winit",
+    "android-game-activity",
+    # Tells cargo-ndk to copy libc++_shared.so alongside the .so automatically
+    "android_shared_stdcxx",
+    "bevy_audio",
+    "vorbis",
+    # Desktop window backend (excluded on Android via cfg)
+    # Add "x11" or "wayland" here for Linux builds if needed
+] }
+
+[profile.release]
+opt-level = "z"    # Optimise for size — important for mobile
+lto = true
+codegen-units = 1
+strip = true

@@ -1,0 +1,71 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+}
+
+android {
+    namespace = "com.example.myapp"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.example.myapp"
+        // GameActivity requires API 31+.
+        // If you need older device support, switch to `android-native-activity`
+        // in Cargo.toml and change MainActivity to extend NativeActivity.
+        minSdk = 31
+        targetSdk = 35
+        versionCode = 1
+        versionName = "0.1.0"
+
+        // Only build for arm64 — add "x86_64" here for emulator support
+        // (also add that target to cargo-ndk in CI)
+        ndk {
+            abiFilters "arm64-v8a"
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+            // Signing is injected via -P flags in CI.
+            // For local release builds, configure a signingConfig here instead.
+        }
+    }
+
+    // Point Gradle at the assets directory at the repo root.
+    // Adjust this path if your assets live somewhere else.
+    sourceSets {
+        main {
+            assets.srcDirs = ["../../assets"]
+            jniLibs.srcDirs = ["src/main/jniLibs"]
+            // Kotlin sources
+            java.srcDirs = ["src/main/kotlin"]
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+
+dependencies {
+    // GameActivity from the Android Game Development Kit (AGDK).
+    // This is what Bevy's `android-game-activity` feature targets.
+    implementation "androidx.games:games-activity:3.0.5"
+
+    // AppCompat is required because GameActivity extends AppCompatActivity,
+    // and the manifest theme must derive from Theme.AppCompat.
+    implementation "androidx.appcompat:appcompat:1.7.0"
+}
+
+// Note: libc++_shared.so is handled by the `android_shared_stdcxx` Bevy feature
+// in Cargo.toml, which tells cargo-ndk to copy it alongside the .so automatically.
+// No dummy CMake target is needed.
