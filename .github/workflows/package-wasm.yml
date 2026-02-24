@@ -21,11 +21,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Print resolved run-id for artifact download
+        run: |
+          echo "github.event.workflow_run.id: ${{ github.event.workflow_run.id }}"
+          echo "inputs.rust_run_id: ${{ inputs.rust_run_id }}"
+          echo "github.run_id: ${{ github.run_id }}"
+          echo "Resolved run-id: ${{ github.event.workflow_run.id || inputs.rust_run_id || github.run_id }}"
+
       - name: Download WASM artifact
         uses: actions/download-artifact@v4
         with:
           name: wasm-out
           path: wasm-out/
+          # Pull from the triggering workflow run, or the manually specified run ID, or fallback to current run
           run-id: ${{ github.event.workflow_run.id || inputs.rust_run_id || github.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
