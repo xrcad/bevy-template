@@ -1,5 +1,10 @@
 name: 'Setup Android SDK'
 description: 'Installs Android SDK Command-line Tools and sets up sdkmanager in PATH.'
+inputs:
+  ndk-version:
+    description: 'NDK version to install (e.g. 27.3.13750724)'
+    required: false
+    default: '27.3.13750724'
 runs:
   using: 'composite'
   steps:
@@ -13,15 +18,17 @@ runs:
         mv cmdline-tools latest
         rm cmdline-tools.zip
         echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+
     - name: Add Android SDK tools to PATH
       shell: bash
       run: |
         echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
         echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
 
-    - name: Install Android NDK (27.3.13750724)
+    - name: Install Android NDK
       shell: bash
       run: |
-        "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" "ndk;27.3.13750724"
-        echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/27.3.13750724" >> $GITHUB_ENV
-        echo "ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/27.3.13750724" >> $GITHUB_ENV
+        NDK_VERSION="${{ inputs.ndk-version }}"
+        "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" "ndk;$NDK_VERSION"
+        echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/$NDK_VERSION" >> $GITHUB_ENV
+        echo "ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$NDK_VERSION" >> $GITHUB_ENV

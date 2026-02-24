@@ -30,14 +30,10 @@ jobs:
           java-version: 21
 
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK & NDK
         uses: ./.github/actions/setup-android-sdk
-
-      - name: Install NDK with sdkmanager
-        run: |
-          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
-          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "ndk;27.2.12479018"
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> $GITHUB_ENV
+        with:
+          ndk-version: 27.3.13750724
 
       - name: Debug NDK install and env
         run: |
