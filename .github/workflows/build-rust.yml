@@ -45,6 +45,13 @@ jobs:
           sdkmanager "ndk;${{ env.NDK_VERSION }}"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }}" >> $GITHUB_ENV
 
+      - name: Debug NDK install and env
+        run: |
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          ls -l "$ANDROID_SDK_ROOT/ndk" || true
+          ls -l "$ANDROID_NDK_HOME" || true
+
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
 
