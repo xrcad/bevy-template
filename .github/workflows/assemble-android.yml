@@ -29,25 +29,12 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install Android SDK Command-line Tools
-        run: |
-          mkdir -p "$HOME/android-sdk/cmdline-tools"
-          cd "$HOME/android-sdk/cmdline-tools"
-          curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mv cmdline-tools latest
-          rm cmdline-tools.zip
-          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
 
-      - name: Add Android SDK tools to PATH
-        run: |
-          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+      - name: Setup Android SDK
+        uses: ./.github/actions/setup-android-sdk
 
       - name: Install NDK with sdkmanager
         run: |
-          export ANDROID_SDK_ROOT="$HOME/android-sdk"
-          export PATH="$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH"
           yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
           sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "ndk;27.2.12479018"
 
