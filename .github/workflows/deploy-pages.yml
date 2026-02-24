@@ -1,4 +1,7 @@
 name: Deploy WASM to GitHub Pages
+permissions:
+  actions: read
+  contents: read
 
 on:
   workflow_run:
