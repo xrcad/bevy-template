@@ -1,0 +1,27 @@
+name: Deploy WASM to GitHub Pages
+
+on:
+  workflow_run:
+    workflows: ["Package WASM"]
+    types: [completed]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download WASM package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-package
+          path: wasm-package/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: wasm-package
+          publish_branch: gh-pages
