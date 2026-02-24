@@ -28,7 +28,7 @@ runs:
     - name: Accept Android SDK licenses
       shell: bash
       run: |
-        yes | "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" --licenses
+        yes | "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" --licenses || true
 
     - name: Install Android NDK
       shell: bash
