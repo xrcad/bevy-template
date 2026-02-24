@@ -1,3 +1,4 @@
+
 name: Build Rust Libraries
 
 on:
@@ -41,6 +42,13 @@ jobs:
         uses: ./.github/actions/setup-android-sdk
         with:
           ndk-version: ${{ env.NDK_VERSION }}
+
+      - name: Debug NDK install
+        run: |
+          echo "Listing /home/runner/android-sdk/ndk:"
+          ls -l /home/runner/android-sdk/ndk || true
+          echo "Listing /home/runner/android-sdk/ndk/${{ env.NDK_VERSION }}:"
+          ls -l /home/runner/android-sdk/ndk/${{ env.NDK_VERSION }} || true
 
       - name: Debug NDK install and env
         run: |
