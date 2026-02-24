@@ -4,9 +4,10 @@ permissions:
   contents: read
 
 on:
-  workflow_run:
-    workflows: ["Package WASM"]
-    types: [completed]
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
