@@ -34,6 +34,13 @@ runs:
       shell: bash
       run: |
         NDK_VERSION="${{ inputs.ndk-version }}"
-        "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" "ndk;$NDK_VERSION"
+        echo "Attempting to install NDK version $NDK_VERSION..."
+        "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" "ndk;$NDK_VERSION" || {
+          echo "NDK install failed. Listing SDK root contents:";
+          ls -l "$HOME/android-sdk";
+          echo "Listing NDK directory:";
+          ls -l "$HOME/android-sdk/ndk" || true;
+          exit 1;
+        }
         echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/$NDK_VERSION" >> $GITHUB_ENV
         echo "ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$NDK_VERSION" >> $GITHUB_ENV
