@@ -1,4 +1,8 @@
+
 name: Assemble Android APK
+permissions:
+  actions: read
+  contents: read
 
 on:
   workflow_run:
@@ -42,20 +46,18 @@ jobs:
           ls -l "$ANDROID_SDK_ROOT/ndk" || true
           ls -l "$ANDROID_NDK_HOME" || true
 
-      - name: Print resolved run-id for artifact download
+      - name: Debug artifact existence before download
         run: |
-          echo "github.event.workflow_run.id: ${{ github.event.workflow_run.id }}"
-          echo "inputs.rust_run_id: ${{ inputs.rust_run_id }}"
-          echo "github.run_id: ${{ github.run_id }}"
-          echo "Resolved run-id: ${{ github.event.workflow_run.id || inputs.rust_run_id || github.run_id }}"
+          echo "Checking for artifact 'jniLibs' in run ${{ github.event.workflow_run.id }}"
+          # There is no direct way to list artifacts, but this step will help debug
+          echo "If download fails, check that the build workflow completed and uploaded the artifact."
 
       - name: Download jniLibs artifact
         uses: actions/download-artifact@v4
         with:
           name: jniLibs
           path: android-project/app/src/main/jniLibs/
-          # Pull from the triggering workflow run, or the manually specified run ID, or fallback to current run
-          run-id: ${{ github.event.workflow_run.id || inputs.rust_run_id || github.run_id }}
+          run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Gradle wrapper
