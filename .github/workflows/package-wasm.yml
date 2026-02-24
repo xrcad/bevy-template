@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p wasm-package
           cp -r wasm-out/* wasm-package/
-          cp -r assets wasm-package/assets
+          if [ -d assets ]; then cp -r assets wasm-package/assets; fi
       - name: Upload WASM package
         uses: actions/upload-artifact@v4
         with:
