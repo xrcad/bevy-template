@@ -15,7 +15,7 @@ name = "myapp"
 path = "src/main.rs"
 
 [dependencies]
-bevy = { version = "0.18", default-features = false, features = [
+bevy = { version = "0.18.0", default-features = false, features = [
     # Core rendering
     "bevy_render",
     "bevy_core_pipeline",
@@ -28,8 +28,6 @@ bevy = { version = "0.18", default-features = false, features = [
     # Asset handling
     "bevy_asset",
     "bevy_animation",
-    # Input
-    "bevy_input",
     # Windowing - android-game-activity is Bevy's default and requires minSdk 31
     "bevy_winit",
     "android-game-activity",
